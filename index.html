@@ -1,1 +1,295 @@
-<h1>hello</h1>
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>BCNF</title>
+    <meta name='viewport' content='width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no'/>
+    <meta name="description" content="">
+    <meta name="keywords" content="">
+    <link href="https://fonts.googleapis.com/css?family=Fira+Sans" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="dist/semantic.min.css">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script
+        src="https://code.jquery.com/jquery-3.1.1.min.js"
+        integrity="sha256-hVVnYaiADRTO2PzUGmuLJr8BLUSjGIZsDYGmIJLv2b8="
+        crossorigin="anonymous">
+    </script>
+    <script src="dist/semantic.min.js"></script>
+    <script type="module" src="script.js"></script>
+</head>
+<body>
+    <div class="ui grid container">
+        <div class="ui hidden divider sixteen wide column"></div>
+        <div class="sixteen wide column">
+            Normalization
+            <div class="ui header huge">
+                Deriving BCNF
+            </div>
+        </div>
+        <div class="ui section divider sixteen wide column" style="padding-bottom: 0% !important; margin-bottom: 0rem !important;"></div>
+
+        <!-- Message text -->
+        <div class="ui message sixteen wide column">
+            <!-- Step 1 Message text -->
+            <div class="step1 stepMessage ui message blank grid">
+                <div class="row two column doubling">
+                    <div class="column">
+                        In the critieria for good DB design, it should
+                        <ul>
+                            <li>minimize NULL values in tuples</li>
+                            <li>not generate <b>spurious tuples</b> when joining</li>
+                            <li>have redundant information</li>
+                        </ul>
+                    </div>
+                    <div class="column">
+                        <b>Functional Dependencies</b> (FD) define relationships between attributes.
+                        <blockquote>A → B means that there is a unique B for every A.</blockquote> 
+                    </div>
+                </div>
+                <div class="row two column doubling">
+                    <div class="column">
+                        The process of <b>normalization</b> tests a DB <b>schema</b> if it satisfies some <b>normal form</b>.
+                    </div>
+
+                    <div class="column">
+                        <b>1NF</b> is met if attribute values are atomic or indivisible.<br>
+                        <b>2NF</b> is met if all non-prime attributes are fully FD on the primary key(s).<br>
+                        <b>3NF</b> is met if there are no FDs X → Y, Y → Z where Y, Z are non-keys.<br>
+                        <b>BCNF</b> is met if there are no FDs X → Y, Y → Z where Y is a non-key.
+                    </div>
+                </div>
+
+
+            </div>
+
+            <!-- Step 2 Message text -->
+            <div class="step2 stepMessage ui message blank grid hidden">
+                <div class="row two column doubling">
+                    <div class="column">
+                        We define the <b>closure</b> of F to be set of all FD, including those that can be inferred.
+                        Redundancies are not included.
+                    </div>
+                    <div class="column">
+                        To compute it, we use Armstrong's axioms.
+                        <ul>
+                            <li>Reflexitivity: if X is subset of Y, then X → Y</li>
+                            <li>Union: if X → Y and X →Z, then X → YZ</li>
+                            <li>Augmentation: if X → Y, then XZ → YZ</li>
+                            <li>Decomposition: if X → YZ, then X → Y and X → Z</li>
+                            <li>Transitivity: if X → Y and Y → Z, then X → Z</li>
+                            <li>Pseudo-Transitivity: if X → Y and WY → Z, then WX → Z</li>
+                            <li>and if X → Y and Y → Z, then XY → Z</li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row two column doubling">
+                    <div class="column">
+                        We need the <b>closure</b> to compute the minimal FD so by applying the Armstrong axioms, we would get the original closure.
+                        <ol>
+                            <li>RHS of its FD is a single attribute</li>
+                            <li>Closure of minimal FD is the equivalent to the original</li>
+                        </ol>
+                    </div>
+
+                    <div class="column">
+                        The algorithm for computing minimal FD is as follows
+                        <ol>
+                            <li>Decompose all FD so RHS have a single attribute</li>
+                            <li>Remove duplicates</li>
+                            <li>Compare FD to one another to find all transitive FDs</li>
+                            <li>Remove FDs that match the generated transitive FDs</li>
+                            <li>Identify all pseudo-transitive FDs and eliminate them</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 3 Message text -->
+            <div class="step3 stepMessage ui message blank grid hidden">
+                <div class="row two column doubling">
+                    <div class="column">
+                        The <b>candidate key(s)</b> functionally determines all attributes in relation.
+                        No distinct tuples have the same values for these attributes.
+                    </div>
+                    <div class="column">
+                        When we decompose our table, we want desire 2 properties
+                        <ul>
+                            <li>
+                                <b>Lossless Join</b> means when we join tables, we get back original table without spurious tuples.
+                            </li>
+                            <li>
+                                <b>Dependency Preservation</b> means that it doesn't require a join to add a tuple.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+                <div class="row two column doubling">
+                    <div class="column">
+                        To determine whether given attribute X is a key, find closure of X and see if it contains all attributes of relation.
+                        If X is composed of multiple attributes, make sure no subset of it also has this property.
+                    </div>
+
+                    <div class="column">
+                        <b>Candidate key</b> is subset of set containing all attributes. Therefore, we need to test 2<sup>attribute</sup>-1 possible keys. There are some simplications -<br>
+                        <ul>
+                            <li>If an attribute is never on the left hand side of a dependency, it is not in any key, unless it is also never on the right hand side</li>
+                            <li>If an attribute is never on the right hand side of any FD, it is in every key</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 4 BCNF text -->
+            <div class="step4 stepMessage ui message blank grid hidden">
+                <div class="row two column doubling">
+                    <div class="column">
+                        The last step is lossless decomposition of our schema into BCNF.
+                    </div>
+                    <div class="column">
+                        The algorithm is simple
+                        <ol>
+                            <li>Set D := {R}</li>
+                            <li>While there is a schema in D that is NOT in BCNF, do</li>
+                            <li>Choose schema Q that is not in BCNF</li>
+                            <li>Find FD X → Y that violates BCNF</li>
+                            <li>Replace Q in D by 2 schemas: (Q - Y) and (X &#8746 Y)</li>
+                        </ol>
+                    </div>
+                </div>
+                <div class="row two column doubling">
+                    <div class="column">
+                    </div>
+
+                    <div class="column">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Step text -->
+        <div class="ui four item menu">
+            <a class="active item stepClass" id="step1">
+                1) Setup Table and list FD
+            </a>
+            <a class="item stepClass" id="step2">
+                2) Minimal Cover
+            </a>
+            <a class="item stepClass" id="step3">
+                3) Finding Candidate Key
+            </a>
+            <a class="item stepClass" id="step4">
+                4) Deriving BCNF
+            </a>
+        </div>
+
+        <!-- Config -->
+        <div class="sixteen wide column">
+            <!-- Step 1 Form -->
+            <div class="ui message grid step1 stepForm">
+                <div class="eight wide column">
+                    <div class="ui grid container">
+                        <!-- # Attributes -->
+                        <div class="sixteen wide column">
+                            <div class="ui form">
+                                <div class="field" id="attributeError">
+                                    <label class="ui">
+                                        Number of Attributes (<=10)
+                                    </label>
+                                    <input type="text" value="5" id="nAttribute">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- FD -->
+                        <div class="ui form sixteen wide column">
+                            <div class="field" id="fdError">
+                            <label>Functional Dependencies</label>
+                            <textarea id="fd" placeholder="Each functional dependency is terminated by semicolon. You may use commas between characters in list. Spaces are ignored.">
+                            </textarea>
+                            </div>
+                        </div>
+
+                        <!-- example -->
+                        <div class="eight wide column">
+                            <b>ex1)</b> a,b,c->d,e,f;<br>
+                            <b>ex2)</b> a&nbsp;bc->d&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ef;
+                        </div>
+
+                        <!-- button -->
+                        <div class="eight wide column">
+                            <button class="positive ui right floated button" id="button-fd">Apply FD</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Table -->
+                <div class="eight wide column">
+                    <table class="ui celled table">
+                        <thead>
+                            <tr id="tableAttribute"></tr>
+                        </thead>
+                        <tbody id="tableRow">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Step 2 Form -->
+            <div class="ui message step2 stepForm hidden">
+                <!-- FD -->
+                <table class="ui celled table sixteen wide column">
+                    <thead>
+                        <tr><th>Original FD</th>
+                        <th>Decomposed FD</th>
+                        <th>No Transitivity FD</th>
+                        <th>No Pseudo-Transitivity FD</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr>
+                        <td id="fd-list"></td>
+                        <td id="fd-list2"></td>
+                        <td id="fd-list3"></td>
+                        <td id="fd-list4"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Step 3 Form -->
+            <div class="ui message grid step3 stepForm hidden">
+                <!-- Candidate Key -->
+                <table class="ui celled table sixteen wide column">
+                    <thead>
+                        <tr><th>Possible Keys</th>
+                        <th>Candidate Keys</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr>
+                        <td id="ck-list"></td>
+                        <td id="ck-list2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Step 4 Form -->
+            <div class="ui message grid step4 stepForm hidden">
+                <!-- BCNF Table -->
+                <table class="ui celled table sixteen wide column">
+                    <thead>
+                        <tr><th>FD Violating BCNF</th>
+                        <th>Decomposed Table</th>
+                    </tr></thead>
+                    <tbody>
+                        <tr>
+                        <td id="bcnf-list"></td>
+                        <td id="bcnf-list2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,14 @@
+8
+a -> b, c, d, f, g, h;
+b -> c;
+b, d -> g;
+h -> g;
+e -> d;
+c, e -> f;
+
+6
+a -> b, c, f;
+b -> d;
+c -> e;
+d, e -> f;
+b, c -> f;

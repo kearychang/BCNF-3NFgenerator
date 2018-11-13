@@ -1,0 +1,9 @@
+.stepMessage {
+    width: 100%;
+}
+
+.blank {
+    border: none !important;
+    box-shadow: none !important;
+    background: none !important;
+}
