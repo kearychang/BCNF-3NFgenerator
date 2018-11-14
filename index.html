@@ -20,11 +20,12 @@
 </head>
 <body>
     <div class="ui grid container">
+        <!-- Title -->
         <div class="ui hidden divider sixteen wide column"></div>
         <div class="sixteen wide column">
             Normalization
             <div class="ui header huge">
-                Deriving BCNF
+                Deriving 3NF/BCNF
             </div>
         </div>
         <div class="ui section divider sixteen wide column" style="padding-bottom: 0% !important; margin-bottom: 0rem !important;"></div>
@@ -35,28 +36,35 @@
             <div class="step1 stepMessage ui message blank grid">
                 <div class="row two column doubling">
                     <div class="column">
-                        In the critieria for good DB design, it should
+                        In the critieria for good DB design, it should not have
                         <ul>
-                            <li>minimize NULL values in tuples</li>
-                            <li>not generate <b>spurious tuples</b> when joining</li>
-                            <li>have redundant information</li>
+                            <li><b>redundancy</b> where students taking courses repeats course information</li>
+                            <li><b>update anomalies</b> where you can update GPA vlaue while leaving others unchanged</li>
+                            <li><b>insertion anomalies</b> where you cannot add new course unless student takes it</li>
+                            <li><b>deletion anomalies</b> where deleting all students taking course removes information abot course</li>
                         </ul>
                     </div>
                     <div class="column">
-                        <b>Functional Dependencies</b> (FD) define relationships between attributes.
-                        <blockquote>A → B means that there is a unique B for every A.</blockquote> 
+                        <b>Decomposition</b> splits our relation into smaller relations that returns original information when joined.</b>
+                        We don't want arbitrary decomposition. We want it to be
+                        <ul>
+                            <li><b>lossless</b> so does not produce extraneous information not in original relation when joined</li>
+                            <li><b>dependency preserving</b> so it is efficient and you don't need to join to perform CRUD operations</li>
+                        </ul>
                     </div>
                 </div>
                 <div class="row two column doubling">
                     <div class="column">
-                        The process of <b>normalization</b> tests a DB <b>schema</b> if it satisfies some <b>normal form</b>.
+                        <b>Functional Dependencies</b> (FD) define relationships between attributes.
+                        <blockquote>A → B means that there is 1 B for every A.</blockquote> 
+                        To get these properties, we must get our database to satisfy certain <b>normal form</b> which are constraints that FD must meet.
                     </div>
 
                     <div class="column">
                         <b>1NF</b> is met if attribute values are atomic or indivisible.<br>
                         <b>2NF</b> is met if all non-prime attributes are fully FD on the primary key(s).<br>
-                        <b>3NF</b> is met if there are no FDs X → Y, Y → Z where Y, Z are non-keys.<br>
-                        <b>BCNF</b> is met if there are no FDs X → Y, Y → Z where Y is a non-key.
+                        <b>3NF</b> is met if there are no FDs X → Y, Y → Z where X is a key and Y is a non-key.<br>
+                        <b>BCNF</b> is met if there are no FDs X → Y where X is a non-key.
                     </div>
                 </div>
 
@@ -67,8 +75,9 @@
             <div class="step2 stepMessage ui message blank grid hidden">
                 <div class="row two column doubling">
                     <div class="column">
-                        We define the <b>closure</b> of F to be set of all FD, including those that can be inferred.
-                        Redundancies are not included.
+                        We define the <b>closure</b> of F to be set of all FD, including those that can be inferred.<br><br>
+                        For example, if we have FDs X → Y and Y -> Z, even if not explicitly stated, Y - Z is logically implied.
+                        Redundant FDs are not included in this set.
                     </div>
                     <div class="column">
                         To compute it, we use Armstrong's axioms.
@@ -78,28 +87,34 @@
                             <li>Augmentation: if X → Y, then XZ → YZ</li>
                             <li>Decomposition: if X → YZ, then X → Y and X → Z</li>
                             <li>Transitivity: if X → Y and Y → Z, then X → Z</li>
-                            <li>Pseudo-Transitivity: if X → Y and WY → Z, then WX → Z</li>
-                            <li>and if X → Y and Y → Z, then XY → Z</li>
+                            <li>Pseudo-Transitivity: if X → Y and Y → Z, then XY → Z</li>
                         </ul>
                     </div>
                 </div>
                 <div class="row two column doubling">
                     <div class="column">
-                        We need the <b>closure</b> to compute the minimal FD so by applying the Armstrong axioms, we would get the original closure.
+                        <b>Closure</b> is important since it helps us get the <b>canonical cover</b>.<br>
+                        This is a set of FD with the following properties.
                         <ol>
-                            <li>RHS of its FD is a single attribute</li>
-                            <li>Closure of minimal FD is the equivalent to the original</li>
+                            <li>RHS of every FD is a single attribute</li>
+                            <li>Closure of canonical cover is equivalent to original closure</li>
+                            <li>Set is minimal so removal of any FD violates above property</li>
                         </ol>
                     </div>
 
                     <div class="column">
-                        The algorithm for computing minimal FD is as follows
+                        The algorithm for computing the <b>canonical cover</b> is as follows
                         <ol>
                             <li>Decompose all FD so RHS have a single attribute</li>
+                                <em>ex) if X → Y, Z, replace it with X → Y and X → Z</em>
                             <li>Remove duplicates</li>
-                            <li>Compare FD to one another to find all transitive FDs</li>
-                            <li>Remove FDs that match the generated transitive FDs</li>
-                            <li>Identify all pseudo-transitive FDs and eliminate them</li>
+                            <li>Eliminate all transitive FDs since they are logically implied anyways<br>
+                                <em>ex) if X → Y and Y → Z, eliminate X → Z if it exists</em>
+                            </li>
+                            <li>Identify all pseudo-transitive FDs and replace/eliminate them<br>
+                                <em>ex) if X → Y and Y → W replace X Y → W with X → W if it exists,<br>
+                                then eliminate it since it is transitive</em>
+                            </li>
                         </ol>
                     </div>
                 </div>
@@ -109,31 +124,35 @@
             <div class="step3 stepMessage ui message blank grid hidden">
                 <div class="row two column doubling">
                     <div class="column">
-                        The <b>candidate key(s)</b> functionally determines all attributes in relation.
-                        No distinct tuples have the same values for these attributes.
+                        Getting the <b>canonical cover</b> is an important step to get the <b>candidate key</b>.<br><br>
+                        The <b>candidate key(s)</b> is the minimal set of attributes that functionally determines all attributes in relation.
+                        In other words, they uniquely identify tuples.
                     </div>
                     <div class="column">
-                        When we decompose our table, we want desire 2 properties
-                        <ul>
-                            <li>
-                                <b>Lossless Join</b> means when we join tables, we get back original table without spurious tuples.
-                            </li>
-                            <li>
-                                <b>Dependency Preservation</b> means that it doesn't require a join to add a tuple.
-                            </li>
-                        </ul>
+                        Why do we care about <b>candidate keys</b>?<br><br>
+                        Remember our goal was to DECOMPOSE the table so it would be lossless and dependency preserving.
+                        <b>Candidate keys</b> tell us if it's okay to decompose our original table into multiple tables.<br>
                     </div>
                 </div>
                 <div class="row two column doubling">
                     <div class="column">
-                        To determine whether given attribute X is a key, find closure of X and see if it contains all attributes of relation.
-                        If X is composed of multiple attributes, make sure no subset of it also has this property.
+                        To determine whether given attribute(s) X is a <b>candidate key</b>,<br>
+                        compute <b>closure</b> of X and see if it contains all attributes of relation on RHS.<br>
+                        If X has multiple attributes, make sure no subset of it also has this property.
                     </div>
 
                     <div class="column">
-                        <b>Candidate key</b> is subset of set containing all attributes. Therefore, we need to test 2<sup>attribute</sup>-1 possible keys. There are some simplications -<br>
+                        The algorithm for computing the <b>candidate key</b> is as follows. 
+                        <ol>
+                            <li>Generate an array of all attribute combinations to test</li>
+                            <li>Sort the array by number of attributes in ascending order</li>
+                            <li>Iterate through array and compute the <b>closure</b></li>
+                            <li>If <b>closure</b> is complete, we only continue for elements of equal length</li>
+                        </ol>
+                        <em>Note: There are 2<sup>attribute</sup>-1 combinations. There are some simplications.<br></em>
                         <ul>
-                            <li>If an attribute is never on the left hand side of a dependency, it is not in any key, unless it is also never on the right hand side</li>
+                            <li>If an attribute is never on the left hand side of a dependency, <br>
+                                it is not in any key, unless it is also never on the right hand side</li>
                             <li>If an attribute is never on the right hand side of any FD, it is in every key</li>
                         </ul>
                     </div>
@@ -144,42 +163,52 @@
             <div class="step4 stepMessage ui message blank grid hidden">
                 <div class="row two column doubling">
                     <div class="column">
-                        The last step is lossless decomposition of our schema into BCNF.
+                        There are BCNF and 3NF <b>normal forms</b>. The important difference is that
+                        <ul>
+                            <li>BCNF is guaranteed <b>lossless</b>, but NOT guaranteed <b>dependency preserving</b></li>
+                            <li>3NF is guaranteed <b>dependency preserving</b> and <b>lossless</b>, but may have some anomalies</li>
+                        </ul>
                     </div>
                     <div class="column">
-                        The algorithm is simple
-                        <ol>
-                            <li>Set D := {R}</li>
-                            <li>While there is a schema in D that is NOT in BCNF, do</li>
-                            <li>Choose schema Q that is not in BCNF</li>
-                            <li>Find FD X → Y that violates BCNF</li>
-                            <li>Replace Q in D by 2 schemas: (Q - Y) and (X &#8746 Y)</li>
-                        </ol>
+                        Ideally, we want a schema that is BCNF, lossless and dependency preserving.<br>
+                        Otherwise, we settle for 3NF.
                     </div>
                 </div>
                 <div class="row two column doubling">
                     <div class="column">
+                        The <b>3NF decomposition algorithm</b> is as follows
+                        <ol>
+                            <li>Combine FD with same LHS by applying Armstrong's Union rule</li>
+                            <li>Make 1 relation for each FD with attributes on both sides of the dependency</li>
+                            <li>If no relation has all attributes of candidate key, create new relation with candidate key attributes</li>
+                        </ol>
                     </div>
 
                     <div class="column">
+                        The <b>BCNF decomposition algorithm</b> is as follows
+                        <ol>
+                            <li>While R is not in BCNF, do</li>
+                            <li>Find FD X → Y where X is a non-key</li>
+                            <li>Decompose our relation into 2 tables (R - Y) and (X &#8746 Y)</li>
+                        </ol>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Step text -->
+        <!-- Steps text -->
         <div class="ui four item menu">
             <a class="active item stepClass" id="step1">
-                1) Setup Table and list FD
+                1) Functional Dependencies
             </a>
             <a class="item stepClass" id="step2">
-                2) Minimal Cover
+                2) Canonical Cover
             </a>
             <a class="item stepClass" id="step3">
-                3) Finding Candidate Key
+                3) Candidate Key
             </a>
             <a class="item stepClass" id="step4">
-                4) Deriving BCNF
+                4) Deriving 3NF/BCNF
             </a>
         </div>
 
@@ -192,20 +221,20 @@
                         <!-- # Attributes -->
                         <div class="sixteen wide column">
                             <div class="ui form">
-                                <div class="field" id="attributeError">
+                                <div class="field" id="attribute-error">
                                     <label class="ui">
                                         Number of Attributes (<=10)
                                     </label>
-                                    <input type="text" value="5" id="nAttribute">
+                                    <input type="text" value="5" id="number-attribute">
                                 </div>
                             </div>
                         </div>
                         
                         <!-- FD -->
                         <div class="ui form sixteen wide column">
-                            <div class="field" id="fdError">
+                            <div class="field" id="fd-error">
                             <label>Functional Dependencies</label>
-                            <textarea id="fd" placeholder="Each functional dependency is terminated by semicolon. You may use commas between characters in list. Spaces are ignored.">
+                            <textarea id="fd-text" placeholder="Each functional dependency is terminated by semicolon. You may use commas between characters in list. Spaces are ignored.">
                             </textarea>
                             </div>
                         </div>
@@ -247,10 +276,10 @@
                     </tr></thead>
                     <tbody>
                         <tr>
-                        <td id="fd-list"></td>
-                        <td id="fd-list2"></td>
-                        <td id="fd-list3"></td>
-                        <td id="fd-list4"></td>
+                        <td id="fd-original"></td>
+                        <td id="fd-decomposed"></td>
+                        <td id="fd-transitivity"></td>
+                        <td id="fd-transitivity2"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -261,13 +290,13 @@
                 <!-- Candidate Key -->
                 <table class="ui celled table sixteen wide column">
                     <thead>
-                        <tr><th>Possible Keys</th>
+                        <tr><th>Attribute Combinations</th>
                         <th>Candidate Keys</th>
                     </tr></thead>
                     <tbody>
                         <tr>
+                        <td id="ck-combination"></td>
                         <td id="ck-list"></td>
-                        <td id="ck-list2"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -278,13 +307,17 @@
                 <!-- BCNF Table -->
                 <table class="ui celled table sixteen wide column">
                     <thead>
-                        <tr><th>FD Violating BCNF</th>
-                        <th>Decomposed Table</th>
+                        <tr><th>Union of FD</th>
+                        <th>3NF</th>
+                        <th>FD violating BCNF</th>
+                        <th>BCNF</th>
                     </tr></thead>
                     <tbody>
                         <tr>
-                        <td id="bcnf-list"></td>
-                        <td id="bcnf-list2"></td>
+                        <td id="3nf-union"></td>
+                        <td id="3nf"></td>
+                        <td id="bcnf-fd-violation"></td>
+                        <td id="bcnf"></td>
                         </tr>
                     </tbody>
                 </table>
