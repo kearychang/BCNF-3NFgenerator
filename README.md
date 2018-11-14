@@ -5,8 +5,8 @@ When designing DB schema, we want it to be free of
 
 To do this, we split our schema so that the original information can be retrieved by **join** operation.
 
-### 3NF/BCNF GENERATOR
-The [3NF/BCNF generator](https://kearychang.github.io/BCNF-3NFgenerator/) automates this procedure in your browser and shows the intermediate steps.
+### BCNF/3NF GENERATOR
+The [BCNF/3NF generator](https://kearychang.github.io/BCNF-3NFgenerator/) automates this procedure in your browser and shows the intermediate steps.
 Let's use an example. Suppose we have the following table.
 
 | StudentNo | StudentName | Degree | GPA  | CourseNo | CourseName  | Grade   | Credits |
@@ -24,7 +24,7 @@ We have functional dependencies
 >3) StudentNo, CourseNo -> Grade
 
 This is because for each LHS value, you can only have 1 RHS value.
-To use the [3NF/BCNF generator](https://kearychang.github.io/BCNF-3NFgenerator/), we need to give the program the number of attributes and FDs.
+To use the [BCNF/3NF generator](https://kearychang.github.io/BCNF-3NFgenerator/), we need to give the program the number of attributes and FDs.
 There are 8 attributes and our FD needs to be in the format specified by the program.
 Replace the attribute names with lower case alphabets starting from 'a' and incrementing left to right.
 
