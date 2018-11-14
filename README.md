@@ -26,4 +26,19 @@ We have functional dependencies
 This is because for each LHS value, you can only have 1 RHS value.
 To use the *3NF/BCNF generator*, we need to give the program the number of attributes and FDs.
 There are 8 attributes and our FD needs to be in the format specified by the program.
+Replace the attribute names with lower case alphabets starting from 'a' and incrementing left to right.
 
+![alt text](https://raw.githubusercontent.com/kearychang/BCNF-3NFgenerator/master/3nf-bcnf-form.JPG)
+
+Hit the green **Apply FD**. See all the intermediate steps by clicking on the menu bar.
+Let's look at the last step.
+
+![alt text](https://raw.githubusercontent.com/kearychang/BCNF-3NFgenerator/master/3nf-bcnf-form2.JPG)
+
+The suggested 3NF decomposition is 
+* (**CourseNo**, CourseName, Credits)
+* (**StudentNo**, **CourseNo**, Grade)
+* (**StudentNo**, StudentName, Degree, GPA)
+
+The suggested BCNF decomposition is
+* (**StudentNo**, StudentName, Degree, GPA, **CourseNo**, CourseName, Credits, Grade)
