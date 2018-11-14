@@ -1,27 +1,35 @@
 export { FD };
 
 class FD {
-    //lhs rhs are 2d arrays, each element is an array of 2 sets, containing LHS and RHS of FD
-    //this.binaryForm is a 2D array where each element is an array of 2 binary numbers, representing of characters in a set
+    //initializes field variables and FDs as array of integer arrays of length 2 in form [int,int]
+    //integer in binary form represents set so [1001,0100] means FD 'a','d' -> 'b'
+    //lhs, rhs are char arrays of equal length, maxSize is the number of attributes in your table
     constructor(lhs, rhs, maxSize) {
         this.size = maxSize;
         this.length = lhs.length;
         this.binaryForm = new Array(lhs.length);
-        for (var i = 0; i < lhs.length; i++) {
-            this.binaryForm[i] = [0, 0];
-        }
+        this.combinationArr = [];
+        this.keyArr = [];
+        this.bcnfArr = [];
 
         //given an array of characters as argument, returns bit mask where it is 1 if it contains the letter in that position
         //e.g. toBinary([a,b,f],7) => 1100010
         //e.g. toBinary([b,c,e],5) => 01101
         for (var i = 0; i < lhs.length; i++) {
+            this.binaryForm[i] = [0, 0];
             this.binaryForm[i][0] = this.toBinary(lhs[i], maxSize);
             this.binaryForm[i][1] = this.toBinary(rhs[i], maxSize);
         };
         this.removeDuplicate();
     }
 
-    //converts array of [char,char,...] to binary
+    //getter for binaryForm array
+    getBinaryForm() {
+        return this.binaryForm;
+    }
+
+    //returns binary number where 'a' is 1 << (size - 1), 'b' is 1 << (size - 2) and so on
+    //arr is char array, size is max number of digits in binary number
     toBinary(arr, size) {
         var bitMask = 0b0;
         var shiftN;
@@ -32,8 +40,9 @@ class FD {
         return bitMask;
     }
 
-    //converts array of [0010, 0100, ...] to string "c,b,..."
-    toList(arr, size) {
+    //returns string of characters separated by commas
+    //arr binary number array, size is max number of digits in binary number
+    binaryToString(arr, size) {
         var str = "";
         var firstLetter = true;
         for (var i = 0; i < arr.length; i++) {
@@ -53,7 +62,8 @@ class FD {
         return str;
     }
 
-    //count ones in x if x is up to 32 bits
+    //return number of 1s in binary form of number
+    //only works for 0 < x < 2^32 - 1
     countOnes(x) {
         x = x - ((x >> 1) & 0x55555555);
         x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
@@ -63,18 +73,19 @@ class FD {
         return (x & 0x0000003F);
     }
 
-    //prints FD as string format
-    getString(debug) {
+    //returns FD array in string format
+    //arr is FD as array of integer arrays of length 2, debug is boolean which prints to console if true
+    getString(arr, debug) {
         var x;
         var str = "";
         var isFirstChar = false;
         var isChar = false;
-        for (var i = 0; i < this.length; i++) {
+        for (var i = 0; i < arr.length; i++) {
             for (var j = 0; j < 2; j++) {
-                (debug) ? console.log(this.binaryForm[i][j].toString(2)): x;
+                (debug) ? console.log(arr[i][j].toString(2)): x;
                 for (var n = 0; n < this.size; n++) {
                     (debug) ? console.log("i " + i + " j " + j + " n " + n): x;
-                    isChar = (this.binaryForm[i][j] & (1 << (this.size - n - 1))) > 0;
+                    isChar = (arr[i][j] & (1 << (this.size - n - 1))) > 0;
                     if (isChar) {
                         if (isFirstChar) {
                             str += ", "
@@ -96,8 +107,7 @@ class FD {
         return str;
     }
 
-    //remove fd that have equivalent LHS and RHS
-    //if you remove items from array while iterating through it, it is easier to do it backwards so it reindexes it
+    //remove duplicate FDs in binaryForm array
     removeDuplicate() {
         var n = 0;
         for (var i = this.binaryForm.length - 1; i >= 0; i = i - n - 1) {
@@ -113,7 +123,34 @@ class FD {
         this.length = this.binaryForm.length;
     }
 
-    //iterate through binaryForm, if rhs has more than 1 attribute, create new element for each extra attribute on rhs and append it to array
+    //returns binaryForm array after merging FDs that have the same LHS
+    union() {
+        var unionArr = [];
+        var includedArr = new Array(this.length).fill(false);
+        var lhs, lhs2, rhs;
+        for (var i = 0; i < this.length; i++) {
+            if (!includedArr[i]) {
+                lhs = this.binaryForm[i][0];
+                rhs = this.binaryForm[i][1];
+                includedArr[i] = true;
+                for (var j = 0; j < this.length; j++) {
+                    if (!includedArr[j]) {
+                        lhs2 = this.binaryForm[j][0];
+                        if (lhs == lhs2) {
+                            includedArr[j] = true;
+                            rhs = rhs | this.binaryForm[j][1];
+                        }
+                    }
+                }
+                unionArr.push([lhs,rhs]);
+            }
+        }
+        this.binaryForm = unionArr;
+        this.length = this.binaryForm.length;
+        return this.binaryForm;
+    }
+
+    //returns binaryForm array after splitting FDs that have more than 1 attribute on RHS
     decomposition() {
         var isChar = false;
         for (var i = this.binaryForm.length - 1; i >= 0; i--) {
@@ -130,9 +167,10 @@ class FD {
             isChar = false;
         }
         this.removeDuplicate();
+        return this.binaryForm;
     }
 
-    //remove transitive FD from our schema
+    //returns binaryForm array after removing all transitive FDs X -> Z if X -> Y and Y -> Z exists
     transitivity() {
         //create adjacency matrix so we can topologically sort our FD, that has (number of attributes) rows and columns
         var adj_mat = new Array(this.size);
@@ -220,11 +258,10 @@ class FD {
             }
         }
         this.length = this.binaryForm.length;
+        return this.binaryForm;
     }
 
-    //we can check for pseudo transitivity by iterating through FD
-    //if LHS has more than 1 attribute, it may be pseudo-transitive
-    //check other FD if there is one where its LHS and RHS are both subsets of LHS of our FD of interest
+    //returns binaryForm array after replace all pseudo-transitive FDs X Y -> Z with X -> Z if X -> Y exists
     transitivity2() {
         var lhs, rhs, lhs2, rhs2;
         for (var i = 0; i < this.length; i++) {
@@ -243,15 +280,14 @@ class FD {
             }
         }
         this.removeDuplicate();
-        this.transitivity();
+        return this.transitivity();
     }
 
-    //return subset of all attributes
-    possibleCandidateKey() {
+    //return array of all combinations of attributes to test for being a candidate key
+    attributeCombination() {
         var includedKeyArr = [];
         var excludedKeyArr = [];
-        this.candidateKeyArr = [];
-
+        
         //if key is never on rhs, it is in every key
         var onRHS = false;
         for (var n = 0; n < this.size; n++) {
@@ -309,28 +345,27 @@ class FD {
                 }
             }
             if (counter > 0) {
-                this.candidateKeyArr.push(counter);
+                this.combinationArr.push(counter);
             }
         }
 
         //sort by length
-        this.candidateKeyArr.sort(function(x, y) {
+        this.combinationArr.sort(function(x, y) {
             return this.countOnes(x) - this.countOnes(y);
         }.bind(this));
 
         //return candidateKeyList
-        return this.toList(this.candidateKeyArr, this.size);
+        return this.combinationArr;
     }
 
-    //generate candidatekey that functionally determines all attributes
+    //return array of candidate keys in set binary form
     candidateKey() {
         var getBinary = 0b0;
         var closureBinary = Math.pow(2,this.size) - 1;
-        this.keyArr = [];
         var minLength = this.size;
-        for (var i = 0; i<this.candidateKeyArr.length; i++) {
-            getBinary = this.candidateKeyArr[i];
-            if (this.countOnes(this.candidateKeyArr[i]) > minLength) {
+        for (var i = 0; i<this.combinationArr.length; i++) {
+            getBinary = this.combinationArr[i];
+            if (this.countOnes(this.combinationArr[i]) > minLength) {
                 break;
             } else {
                 for (var n = 0; n<this.length; n++) {
@@ -339,45 +374,39 @@ class FD {
                     }
                 }
                 if (getBinary == closureBinary) {
-                    minLength = this.countOnes(this.candidateKeyArr[i]);
-                    this.keyArr.push(this.candidateKeyArr[i]);
+                    minLength = this.countOnes(this.combinationArr[i]);
+                    this.keyArr.push(this.combinationArr[i]);
                 }
             }
         }
 
         //return keyList
-        return this.toList(this.keyArr, this.size);
+        return this.keyArr;
     }
 
-    //returns string of FD violating BCNF
-    findFDViolatingBCNF() {
-        //recompose FD
-        var recomposeFDArr = [];
-        var includedArr = new Array(this.length).fill(false);
-        var lhs, lhs2, rhs;
+    //returns array of attributes in binary form which are in 3NF
+    threeNF() {
+        var threeNFArr = [];
+        var isCandidateKey = false;
         for (var i = 0; i < this.length; i++) {
-            if (!includedArr[i]) {
-                lhs = this.binaryForm[i][0];
-                rhs = this.binaryForm[i][1];
-                includedArr[i] = true;
-                for (var j = 0; j < this.length; j++) {
-                    if (!includedArr[j]) {
-                        lhs2 = this.binaryForm[j][0];
-                        if (lhs == lhs2) {
-                            includedArr[j] = true;
-                            rhs = rhs | this.binaryForm[j][1];
-                        }
-                    }
-                }
-                recomposeFDArr.push([lhs,rhs]);
+            threeNFArr.push(this.binaryForm[i][0] | this.binaryForm[i][1]);
+        }
+        for (var i = 0; i < this.length; i++) {
+            if ((threeNFArr[i] & this.keyArr[0]) == this.keyArr[0]) {
+                isCandidateKey = true;
+                break;
             }
         }
-        this.binaryForm = recomposeFDArr;
-        this.length = this.binaryForm.length;
+        if (!isCandidateKey) {
+            threeNFArr.push(this.keyArr[0]);
+        }
+        return threeNFArr;
+    }
 
-        //check if there are any FD where X->Y and Y->Z where Y is not subset of superkey
-        var violatingFDArr = [];
+    //return FD array violating BCNF
+    bcnfViolation() {
         var candidateKeyBinary = 0b0;
+        var lhs,rhs,lhs2;
         for (var i = 0; i < this.keyArr.length; i++) {
             candidateKeyBinary = candidateKeyBinary | this.keyArr[i];
         }
@@ -387,18 +416,16 @@ class FD {
             for (var j = 0; j < this.length; j++) {   
                 lhs2 = this.binaryForm[j][0];
                 if ((i != j) && ((lhs2 & rhs) == lhs2) && ((lhs2 & candidateKeyBinary) != lhs2)) {
-                    violatingFDArr.push(this.binaryForm[j]);
+                    this.bcnfArr.push(this.binaryForm[j]);
                 }
             }
         }
 
-        this.binaryForm = violatingFDArr;
-        this.length = this.binaryForm.length;
-        return this.getString(false);
+        return this.bcnfArr;
     }
 
-    //returns string of tables showing how to decompose schema
-    decomposeBCNF() {
+    //returns array of attributes in binary form which are in BCNF
+    bcnf() {
         var decomposeArr = [];
         var remainingBin = Math.pow(2,this.size) - 1;
 
@@ -413,11 +440,11 @@ class FD {
             return a;
         }
 
-        for (var i = 0; i < this.length; i++) {
-            decomposeArr.push(this.binaryForm[i][0] | this.binaryForm[i][1]);
-            remainingBin = setDifference(remainingBin, this.binaryForm[i][1], this.size);
+        for (var i = 0; i < this.bcnfArr.length; i++) {
+            decomposeArr.push(this.bcnfArr[i][0] | this.bcnfArr[i][1]);
+            remainingBin = setDifference(remainingBin, this.bcnfArr[i][1], this.size);
         }
         decomposeArr.push(remainingBin);
-        return this.toList(decomposeArr, this.size);
+        return decomposeArr;
     }
 }
