@@ -42,3 +42,5 @@ The suggested 3NF decomposition is
 
 The suggested BCNF decomposition is
 * (**StudentNo**, StudentName, Degree, GPA, **CourseNo**, CourseName, Credits, Grade)
+
+**Note: This website is NOT supported for mobile devices.**
